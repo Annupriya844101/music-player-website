@@ -1,13 +1,6 @@
 name: Deploy SoundSpace to Cloudflare Workers
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "worker.js"
-      - "wrangler.toml"
-      - "public/**"
-      - ".github/workflows/deploy-cloudflare.yml"
 jobs:
   deploy:
     runs-on: ubuntu-latest
