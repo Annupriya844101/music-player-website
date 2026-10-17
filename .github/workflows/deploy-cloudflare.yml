@@ -1,0 +1,25 @@
+name: Deploy SoundSpace to Cloudflare Workers
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "worker.js"
+      - "wrangler.toml"
+      - "public/**"
+      - ".github/workflows/deploy-cloudflare.yml"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Deploy Worker and static assets
+        run: npx wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
