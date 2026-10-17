@@ -83,15 +83,21 @@ export default {
       const track = await found.json();
       try {
         const file = await telegramCall(env, "getFile", { file_id: track.fileId });
-        const upstream = await fetch(`https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.file_path}`);
+        const range = request.headers.get("range");
+        const upstream = await fetch(`https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.file_path}`, {
+          headers: range ? { range } : {}
+        });
         if (!upstream.ok || !upstream.body) return new Response("Audio stream unavailable.", { status: 502 });
         const headers = new Headers({
           "content-type": track.mime || "audio/mpeg",
           "cache-control": "private, no-store",
           "x-content-type-options": "nosniff"
         });
-        if (track.size) headers.set("content-length", String(track.size));
-        return new Response(upstream.body, { status: 200, headers });
+        for (const name of ["content-length", "content-range", "accept-ranges"]) {
+          const value = upstream.headers.get(name);
+          if (value) headers.set(name, value);
+        }
+        return new Response(upstream.body, { status: upstream.status, headers });
       } catch {
         return new Response("Audio stream failed.", { status: 502 });
       }
