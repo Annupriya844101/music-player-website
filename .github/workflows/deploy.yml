@@ -1,11 +1,8 @@
 name: Deploy to Railway
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 jobs:
   deploy:
-    if: ${{ secrets.RAILWAY_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,6 +10,11 @@ jobs:
         with:
           node-version: 20
       - run: npm install -g @railway/cli
-      - run: railway up --service "${{ vars.RAILWAY_SERVICE_NAME }}" --detach
+      - name: Deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_NAME: ${{ vars.RAILWAY_SERVICE_NAME }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then echo "Add RAILWAY_TOKEN in repository Actions secrets."; exit 1; fi
+          if [ -z "$RAILWAY_SERVICE_NAME" ]; then echo "Add RAILWAY_SERVICE_NAME in repository Actions variables."; exit 1; fi
+          railway up --service "$RAILWAY_SERVICE_NAME" --detach
